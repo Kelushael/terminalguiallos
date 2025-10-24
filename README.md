@@ -10,6 +10,8 @@ Navigate the web through interactive terminal prompts - like a boot menu for you
 - **Smart Controls**: Fill forms, click buttons, navigate links - all from your terminal
 - **Beautiful UI**: Clean, colored terminal interface using Rich
 - **Easy Launch**: Double-click launchers for Windows and Linux
+- **Global Command**: Install as system-wide command - run from anywhere!
+- **Split-Screen Mode**: Optional tmux integration for dual-pane browsing
 
 ## 📋 Requirements
 
@@ -40,6 +42,40 @@ The launcher will automatically:
 2. Install all dependencies
 3. Download Chromium browser
 4. Launch the application
+
+### System-Wide Installation (Recommended)
+
+Install once and run from anywhere in your terminal:
+
+```bash
+# Run the installer
+./install.sh
+
+# Choose installation method:
+# 1. User installation (~/.local/bin)        - No sudo required
+# 2. System-wide (/usr/local/bin)            - Requires sudo
+# 3. Shell alias                             - Adds to .bashrc/.zshrc
+# 4. Skip (use ./terminalbrowser directly)
+```
+
+After installation, you can run from any directory:
+
+```bash
+# Run normally
+terminalbrowser
+
+# Run with tmux split-screen mode
+terminalbrowser --tmux
+
+# Show help
+terminalbrowser --help
+```
+
+**Tmux Split-Screen Mode:**
+- Automatically splits your terminal into two panes
+- Browser runs in one pane, info/status in the other
+- Great for monitoring and multitasking
+- Requires tmux: `sudo apt install tmux` (Linux) or `brew install tmux` (Mac)
 
 ### Manual Installation
 
@@ -100,9 +136,28 @@ python3 browser_terminal.py
 
 ### Starting the Browser
 
-1. Launch the application (double-click launcher or run command)
-2. Enter a starting URL (default: google.com)
-3. Wait for the page to load
+There are multiple ways to launch the browser:
+
+**Method 1: Global Command (after running install.sh)**
+```bash
+terminalbrowser              # Launch normally
+terminalbrowser --tmux       # Launch with split-screen
+```
+
+**Method 2: Double-Click Launcher**
+- Linux/Mac: Double-click `launch.sh`
+- Windows: Double-click `launch.bat`
+
+**Method 3: Direct Script**
+```bash
+./terminalbrowser           # From project directory
+python3 browser_terminal.py # Direct Python execution
+```
+
+Once launched:
+1. Enter a starting URL (default: google.com)
+2. Wait for the page to load
+3. Start navigating with numbered options!
 
 ### Navigation Menu
 

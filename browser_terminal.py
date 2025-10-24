@@ -14,6 +14,9 @@ from rich.text import Text
 from rich import box
 from bs4 import BeautifulSoup
 import sys
+import os
+import subprocess
+import argparse
 from typing import List, Dict, Optional
 import re
 
@@ -328,14 +331,101 @@ class BrowserNavigator:
         self.console.print("[green]Goodbye![/green]")
 
 
-async def main():
+def check_tmux():
+    """Check if running inside tmux"""
+    return os.environ.get('TMUX') is not None
+
+
+def launch_with_tmux():
+    """Launch the application in a tmux split"""
+    if check_tmux():
+        # Already in tmux, create a split
+        print("Creating tmux split pane...")
+        # Split horizontally (top/bottom)
+        subprocess.run(['tmux', 'split-window', '-v', '-p', '70',
+                       f'python3 {os.path.abspath(__file__)}'])
+        print("Browser launched in split pane!")
+        print("Use Ctrl+B then arrow keys to switch between panes")
+        print("Press Enter to close this message...")
+        input()
+    else:
+        # Not in tmux, start a new tmux session with split
+        print("Starting new tmux session with split view...")
+        script_path = os.path.abspath(__file__)
+
+        # Create a tmux session with a split
+        tmux_commands = f"""
+            tmux new-session -d -s terminalbrowser
+            tmux split-window -v -p 70 -t terminalbrowser 'python3 {script_path}'
+            tmux select-pane -t 0
+            tmux send-keys -t terminalbrowser:0.0 'echo "Terminal Browser Navigator - Info Pane"' C-m
+            tmux send-keys -t terminalbrowser:0.0 'echo ""' C-m
+            tmux send-keys -t terminalbrowser:0.0 'echo "Browser running in bottom pane"' C-m
+            tmux send-keys -t terminalbrowser:0.0 'echo "Ctrl+B then arrow keys to switch panes"' C-m
+            tmux send-keys -t terminalbrowser:0.0 'echo "Type \\"exit\\" or Ctrl+D to close this pane"' C-m
+            tmux attach-session -t terminalbrowser
+        """
+
+        subprocess.run(['bash', '-c', tmux_commands.strip()])
+
+
+async def main(args):
+    """Main entry point with argument support"""
     navigator = BrowserNavigator()
     await navigator.run()
 
 
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description='Terminal Browser Navigator - Browse the web from your terminal',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  terminalbrowser                  # Launch normally
+  terminalbrowser --tmux          # Launch with tmux split view
+  terminalbrowser --help          # Show this help message
+
+Controls:
+  0-99  : Select menu option
+  0     : Go to URL
+  r     : Refresh page
+  p     : Print page content
+  q     : Quit
+        """
+    )
+
+    parser.add_argument(
+        '--tmux',
+        action='store_true',
+        help='Launch in tmux split-screen mode'
+    )
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='Terminal Browser Navigator v1.0'
+    )
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        args = parse_args()
+
+        if args.tmux:
+            # Check if tmux is installed
+            if subprocess.run(['which', 'tmux'], capture_output=True).returncode != 0:
+                print("Error: tmux is not installed.")
+                print("Install it with: sudo apt install tmux  (Ubuntu/Debian)")
+                print("              or: brew install tmux      (Mac)")
+                sys.exit(1)
+
+            launch_with_tmux()
+        else:
+            asyncio.run(main(args))
+
     except KeyboardInterrupt:
         print("\nExiting...")
         sys.exit(0)
